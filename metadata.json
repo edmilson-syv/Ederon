@@ -1,0 +1,8 @@
+{
+  "name": "Ederon Distribuidora",
+  "description": "Sistema de gestão para bares com controle de mesas, pedidos e finanças.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

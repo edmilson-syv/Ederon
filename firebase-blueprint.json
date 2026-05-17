@@ -1,0 +1,104 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "Stock item",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "price": { "type": "number" },
+        "stock": { "type": "integer" },
+        "category": { "type": "string" }
+      },
+      "required": ["name", "price", "stock", "category"]
+    },
+    "Table": {
+      "title": "Table",
+      "description": "Establishment table",
+      "type": "object",
+      "properties": {
+        "number": { "type": "string" },
+        "status": { "type": "string", "enum": ["available", "occupied"] },
+        "currentOrderId": { "type": "string" }
+      },
+      "required": ["number", "status"]
+    },
+    "OrderItem": {
+      "title": "OrderItem",
+      "description": "Item in an order",
+      "type": "object",
+      "properties": {
+        "productId": { "type": "string" },
+        "name": { "type": "string" },
+        "price": { "type": "number" },
+        "quantity": { "type": "integer" }
+      },
+      "required": ["productId", "name", "price", "quantity"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer order",
+      "type": "object",
+      "properties": {
+        "tableId": { "type": "string" },
+        "customerId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "items": { "type": "array", "items": { "$ref": "OrderItem" } },
+        "total": { "type": "number" },
+        "status": { "type": "string", "enum": ["open", "closed", "cancelled"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "closedAt": { "type": "string", "format": "date-time" },
+        "paymentMethod": { "type": "string", "enum": ["dinheiro", "cartao", "pix"] }
+      },
+      "required": ["tableId", "items", "total", "status", "createdAt"]
+    },
+    "Customer": {
+      "title": "Customer",
+      "description": "Customer loyalty data",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "totalSpent": { "type": "number" }
+      },
+      "required": ["name", "totalSpent"]
+    },
+    "FinanceRecord": {
+      "title": "FinanceRecord",
+      "description": "Income or expense record",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["income", "expense"] },
+        "amount": { "type": "number" },
+        "description": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "category": { "type": "string" }
+      },
+      "required": ["type", "amount", "description", "date", "category"]
+    }
+  },
+  "firestore": {
+    "/products/{productId}": {
+      "schema": "Product",
+      "description": "Inventory products"
+    },
+    "/tables/{tableId}": {
+      "schema": "Table",
+      "description": "Restaurant tables"
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Customer orders"
+    },
+    "/customers/{customerId}": {
+      "schema": "Customer",
+      "description": "Customer profiles"
+    },
+    "/finance/{recordId}": {
+      "schema": "FinanceRecord",
+      "description": "Financial bookkeeping"
+    }
+  }
+}

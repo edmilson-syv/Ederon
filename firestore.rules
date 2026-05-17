@@ -1,0 +1,102 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // 1. Products
+    match /products/{productId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(productId) && isValidProduct(incoming());
+      allow update: if isSignedIn() && isValidProduct(incoming());
+      allow delete: if isSignedIn();
+
+      function isValidProduct(data) {
+        return data.keys().hasAll(['name', 'price', 'stock', 'category']) 
+          && data.keys().size() == 4
+          && data.name is string && data.name.size() > 0 && data.name.size() <= 100
+          && data.price is number && data.price >= 0
+          && data.stock is int && data.stock >= 0
+          && data.category is string && data.category in ['Bebidas', 'Porções', 'Cigarros', 'Outros'];
+      }
+    }
+
+    // 2. Tables
+    match /tables/{tableId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(tableId) && isValidTable(incoming());
+      allow update: if isSignedIn() && isValidTable(incoming());
+      allow delete: if isSignedIn();
+
+      function isValidTable(data) {
+        return data.keys().hasAll(['number', 'status'])
+          && data.number is string && data.number.size() > 0
+          && data.status in ['available', 'occupied'];
+      }
+    }
+
+    // 3. Orders
+    match /orders/{orderId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(orderId) && isValidOrder(incoming()) 
+        && incoming().createdAt == request.time;
+      allow update: if isSignedIn() && isValidOrder(incoming())
+        && (incoming().updatedAt == request.time || incoming().closedAt == request.time);
+      allow delete: if isSignedIn();
+
+      function isValidOrder(data) {
+        return data.keys().hasAll(['tableId', 'items', 'total', 'status', 'createdAt'])
+          && data.tableId is string
+          && data.items is list
+          && data.total is number && data.total >= 0
+          && data.status in ['open', 'closed', 'cancelled'];
+      }
+    }
+
+    // 4. Customers
+    match /customers/{customerId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(customerId) && isValidCustomer(incoming());
+      allow update: if isSignedIn() && isValidCustomer(incoming());
+      allow delete: if isSignedIn();
+
+      function isValidCustomer(data) {
+        return data.name is string && data.name.size() > 0;
+      }
+    }
+
+    // 5. Finance
+    match /finance/{recordId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(recordId) && isValidFinance(incoming())
+        && incoming().date == request.time;
+      allow delete: if isSignedIn();
+
+      function isValidFinance(data) {
+        return data.type in ['income', 'expense']
+          && data.amount is number && data.amount >= 0
+          && data.description is string;
+      }
+    }
+  }
+}
